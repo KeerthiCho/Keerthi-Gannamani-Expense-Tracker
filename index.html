@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Keerthi's Expense Tracker</title>
+<style>
+    * {margin:0; padding:0; box-sizing:border-box;}
+    body {font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height:100vh; padding:20px; color:#fff;}
+    .container {max-width:800px; margin:0 auto; background:white; border-radius:15px; box-shadow:0 20px 40px rgba(0,0,0,0.1); overflow:hidden; color:#333;}
+    .header {background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:white; padding:30px; text-align:center;}
+    .header h1 {font-size:2.5rem; margin-bottom:10px;}
+    .header p {opacity:0.9; font-size:1.1rem;}
+    .form-section {padding:30px; border-bottom:1px solid #eee;}
+    .form-group {margin-bottom:20px;}
+    label {display:block; margin-bottom:8px; font-weight:600;}
+    input, select {width:100%; padding:12px; border:2px solid #e1e5e9; border-radius:8px; font-size:16px; transition:border-color 0.3s ease;}
+    input:focus, select:focus {outline:none; border-color:#667eea;}
+    .form-row {display:grid; grid-template-columns:1fr 1fr 1fr; gap:20px;}
+    .btn {background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color:white; border:none; padding:12px 30px; border-radius:8px; font-size:16px; font-weight:600; cursor:pointer; transition: transform 0.2s ease;}
+    .btn:hover {transform: translateY(-2px);}
+    .btn-secondary {background:#6c757d;}
+    .btn-danger {background:#dc3545;}
+    .btn-small {padding:6px 12px; font-size:14px; margin:0 5px;}
+    .expenses-section {padding:30px;}
+    .summary {display:grid; grid-template-columns:repeat(auto-fit, minmax(200px,1fr)); gap:20px; margin-bottom:30px;}
+    .summary-card {background:#f8f9fa; padding:20px; border-radius:10px; text-align:center; border-left:4px solid #667eea;}
+    .summary-card h3 {color:#667eea; font-size:1.8rem; margin-bottom:5px;}
+    .summary-card p {color:#666; font-weight:600;}
+    .expense-list {background:#f8f9fa; border-radius:10px; overflow:hidden;}
+    .expense-item {background:white; margin:10px; padding:20px; border-radius:8px; display:grid; grid-template-columns:1fr auto auto; align-items:center; gap:15px; box-shadow:0 2px 5px rgba(0,0,0,0.1);}
+    .expense-details h4 {color:#333; margin-bottom:5px;}
+    .expense-details p {color:#666; font-size:14px;}
+    .expense-amount {font-size:1.2rem; font-weight:bold; color:#dc3545;}
+    .expense-actions {display:flex; gap:5px;}
+    .empty-state {text-align:center; padding:40px; color:#666;}
+    .empty-state h3 {margin-bottom:10px;}
+    .hidden {display:none;}
+    .login-section {padding:30px;}
+    .login-section h2 {margin-bottom:20px; text-align:center;}
+</style>
+</head>
+<body>
+<div class="container">
+
+    <!-- Login/Register Screen -->
+    <div id="loginScreen" class="login-section">
+        <h2 id="loginTitle">Login</h2>
+        <div class="form-group">
+            <label for="username">Username</label>
+            <input type="text" id="username" placeholder="Enter username">
+        </div>
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" placeholder="Enter password">
+        </div>
+        <button id="loginBtn" class="btn">Login</button>
+        <p style="text-align:center; margin-top:12px;"><span id="toggleLogin" style="color:#667eea; cursor:pointer;">No account? Register here</span></p>
+    </div>
+
+    <!-- Expense Tracker App -->
+    <div id="appScreen" class="hidden">
+        <div class="header">
+            <h1>💰 Expense Tracker</h1>
+            <p id="welcomeUser">Welcome, User</p>
+            <button id="logoutBtn" class="btn btn-secondary">Logout</button>
+        </div>
+
+        <div class="form-section">
+            <form id="expenseForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="description">Description</label>
+                        <input type="text" id="description" required placeholder="e.g., Grocery shopping">
+                    </div>
+                    <div class="form-group">
+                        <label for="amount">Amount ($)</label>
+                        <input type="number" id="amount" step="0.01" required placeholder="0.00">
+                    </div>
+                    <div class="form-group">
+                        <label for="category">Category</label>
+                        <select id="category" required>
+                            <option value="">Select Category</option>
+                            <option value="Food">🍔 Food</option>
+                            <option value="Transportation">🚗 Transportation</option>
+                            <option value="Entertainment">🎬 Entertainment</option>
+                            <option value="Shopping">🛍️ Shopping</option>
+                            <option value="Bills">📄 Bills</option>
+                            <option value="Healthcare">🏥 Healthcare</option>
+                            <option value="Other">📦 Other</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="date">Date</label>
+                    <input type="date" id="date" required>
+                </div>
+                <button type="submit" class="btn" id="submitBtn">Add Expense</button>
+                <button type="button" class="btn btn-secondary" id="cancelBtn" style="display: none;">Cancel</button>
+            </form>
+        </div>
+
+        <div class="expenses-section">
+            <div class="summary" id="summary">
+                <div class="summary-card">
+                    <h3 id="totalExpenses">$0.00</h3>
+                    <p>Total Expenses</p>
+                </div>
+                <div class="summary-card">
+                    <h3 id="expenseCount">0</h3>
+                    <p>Total Transactions</p>
+                </div>
+                <div class="summary-card">
+                    <h3 id="avgExpense">$0.00</h3>
+                    <p>Average Expense</p>
+                </div>
+            </div>
+
+            <div class="expense-list" id="expenseList">
+                <div class="empty-state">
+                    <h3>No expenses yet</h3>
+                    <p>Add your first expense using the form above</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+class ExpenseTracker {
+    constructor(user) {
+        this.user = user;
+        this.expenses = this.loadExpenses();
+        this.editingId = null;
+        this.initializeEventListeners();
+        this.setTodayDate();
+        this.renderExpenses();
+        this.updateSummary();
+    }
+
+    initializeEventListeners() {
+        document.getElementById('expenseForm').addEventListener('submit', (e)=>this.handleSubmit(e));
+        document.getElementById('cancelBtn').addEventListener('click', ()=>this.cancelEdit());
+    }
+
+    setTodayDate() {
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('date').value = today;
+    }
+
+    handleSubmit(e){
+        e.preventDefault();
+        const formData = {
+            description: document.getElementById('description').value.trim(),
+            amount: parseFloat(document.getElementById('amount').value),
+            category: document.getElementById('category').value,
+            date: document.getElementById('date').value
+        };
+        if(this.editingId){
+            this.updateExpense(this.editingId, formData);
+        } else {
+            this.addExpense(formData);
+        }
+        this.resetForm();
+    }
+
+    addExpense(expenseData){
+        const expense = {id: Date.now().toString(), ...expenseData};
+        this.expenses.unshift(expense);
+        this.saveExpenses();
+        this.renderExpenses();
+        this.updateSummary();
+    }
+
+    updateExpense(id, expenseData){
+        const index = this.expenses.findIndex(exp=>exp.id===id);
+        if(index!==-1){
+            this.expenses[index] = {...this.expenses[index], ...expenseData};
+            this.saveExpenses();
+            this.renderExpenses();
+            this.updateSummary();
+        }
+    }
+
+    deleteExpense(id){
+        if(confirm('Are you sure you want to delete this expense?')){
+            this.expenses = this.expenses.filter(exp=>exp.id!==id);
+            this.saveExpenses();
+            this.renderExpenses();
+            this.updateSummary();
+        }
+    }
+
+    editExpense(id){
+        const expense = this.expenses.find(exp=>exp.id===id);
+        if(expense){
+            document.getElementById('description').value = expense.description;
+            document.getElementById('amount').value = expense.amount;
+            document.getElementById('category').value = expense.category;
+            document.getElementById('date').value = expense.date;
+            this.editingId = id;
+            document.getElementById('submitBtn').textContent = 'Update Expense';
+            document.getElementById('cancelBtn').style.display='inline-block';
+            document.querySelector('.form-section').scrollIntoView({behavior:'smooth'});
+        }
+    }
+
+    cancelEdit(){
+        this.editingId=null;
+        this.resetForm();
+    }
+
+    resetForm(){
+        document.getElementById('expenseForm').reset();
+        this.setTodayDate();
+        this.editingId=null;
+        document.getElementById('submitBtn').textContent='Add Expense';
+        document.getElementById('cancelBtn').style.display='none';
+    }
+
+    renderExpenses(){
+        const expenseList = document.getElementById('expenseList');
+        if(this.expenses.length===0){
+            expenseList.innerHTML=`<div class="empty-state"><h3>No expenses yet</h3><p>Add your first expense using the form above</p></div>`;
+            return;
+        }
+        const html=this.expenses.map(exp=>`
+            <div class="expense-item">
+                <div class="expense-details">
+                    <h4>${exp.description}</h4>
+                    <p>${exp.category} • ${this.formatDate(exp.date)}</p>
+                </div>
+                <div class="expense-amount">$${exp.amount.toFixed(2)}</div>
+                <div class="expense-actions">
+                    <button class="btn btn-secondary btn-small" onclick="tracker.editExpense('${exp.id}')">Edit</button>
+                    <button class="btn btn-danger btn-small" onclick="tracker.deleteExpense('${exp.id}')">Delete</button>
+                </div>
+            </div>`).join('');
+        expenseList.innerHTML=html;
+    }
+
+    updateSummary(){
+        const total=this.expenses.reduce((sum,exp)=>sum+exp.amount,0);
+        const count=this.expenses.length;
+        const avg=count>0?total/count:0;
+        document.getElementById('totalExpenses').textContent=`$${total.toFixed(2)}`;
+        document.getElementById('expenseCount').textContent=count;
+        document.getElementById('avgExpense').textContent=`$${avg.toFixed(2)}`;
+    }
+
+    formatDate(dateString){
+        const date=new Date(dateString);
+        return date.toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});
+    }
+
+    saveExpenses(){
+        localStorage.setItem('expenses_'+this.user,JSON.stringify(this.expenses));
+    }
+
+    loadExpenses(){
+        const stored=localStorage.getItem('expenses_'+this.user);
+        return stored?JSON.parse(stored):[];
+    }
+}
+
+// ---------- Simple Auth ----------
+let tracker=null;
+let currentUser=null;
+const usersKey='expense_users';
+
+function showLogin(){
+    document.getElementById('loginScreen').classList.remove('hidden');
+    document.getElementById('appScreen').classList.add('hidden');
+}
+
+function showApp(user){
+    document.getElementById('loginScreen').classList.add('hidden');
+    document.getElementById('appScreen').classList.remove('hidden');
+    document.getElementById('welcomeUser').textContent='Welcome, '+user;
+    tracker=new ExpenseTracker(user);
+}
+
+document.getElementById('toggleLogin').addEventListener('click', ()=>{
+    const title=document.getElementById('loginTitle');
+    const btn=document.getElementById('loginBtn');
+    if(title.textContent==='Login'){
+        title.textContent='Register';
+        btn.textContent='Register';
+        document.getElementById('toggleLogin').textContent='Already have an account? Login here';
+    }else{
+        title.textContent='Login';
+        btn.textContent='Login';
+        document.getElementById('toggleLogin').textContent='No account? Register here';
+    }
+});
+
+document.getElementById('loginBtn').addEventListener('click', ()=>{
+    const username=document.getElementById('username').value.trim();
+    const password=document.getElementById('password').value;
+    if(!username||!password){alert('Enter username and password'); return;}
+    let users=JSON.parse(localStorage.getItem(usersKey)||'{}');
+    const isLogin=document.getElementById('loginTitle').textContent==='Login';
+    if(isLogin){
+        if(!users[username]||users[username]!==password){alert('Invalid credentials'); return;}
+    }else{
+        if(users[username]){alert('User already exists'); return;}
+        users[username]=password;
+        localStorage.setItem(usersKey,JSON.stringify(users));
+    }
+    localStorage.setItem('session_user',username);
+    currentUser=username;
+    showApp(username);
+});
+
+document.getElementById('logoutBtn').addEventListener('click', ()=>{
+    localStorage.removeItem('session_user');
+    currentUser=null;
+    tracker=null;
+    showLogin();
+});
+
+// Check session on load
+window.addEventListener('load', ()=>{
+    const session=localStorage.getItem('session_user');
+    if(session){
+        currentUser=session;
+        showApp(session);
+    }else{
+        showLogin();
+    }
+});
+</script>
+</body>
+</html>
